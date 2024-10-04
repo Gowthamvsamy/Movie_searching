@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    font-family: "Poppins", sans-serif !important;
+}
+
+.form-control {
+    @apply border border-slate-500 rounded p-3 focus:ring-2 focus:border-none focus:outline-none focus:ring-blue-500
+}
+
+.navli {
+    @apply hover:scale-105 hover:text-red-600 hover:underline underline-offset-4
+}
+
+.active {
+    @apply text-red-600 underline underline-offset-4
+}
