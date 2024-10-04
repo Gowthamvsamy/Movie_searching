@@ -35,7 +35,7 @@ function Home() {
     const openModal = async (movieimdbID) => {
         setLoder(true); // Show loader while fetching
         try {
-            const response = await axios.get('http://www.omdbapi.com/', {
+            const response = await axios.get('https://www.omdbapi.com/', {
                 params: {
                     i: movieimdbID, // Fetch detailed movie by title
                     apikey: 'd8f0849d'
@@ -73,7 +73,7 @@ function Home() {
                     searchParams.type = selectedType.toLowerCase(); // Include type param in request
                 }
 
-                const searchResponse = await axios.get('http://www.omdbapi.com/', {
+                const searchResponse = await axios.get('https://www.omdbapi.com/', {
                     params: searchParams,
                 });
 
