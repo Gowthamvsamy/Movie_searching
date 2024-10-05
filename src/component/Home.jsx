@@ -15,7 +15,11 @@ function Home() {
     const [selectedType, setSelectedType] = useState(''); // store the selected movie type
     const [isButtonDisabled, setIsButtonDisabled] = useState(true); // State for disabling the button
 
-    const toggleDropDown = () => { setDropDown(!dropDown); } // toggle dropdown visibility
+    const toggleDropDown = () => {
+        setDropDown(!dropDown);
+    } // toggle dropdown visibility
+
+
 
     const movieTypes = [
         "All", "Movie", "Series", "Episode"
@@ -148,12 +152,19 @@ function Home() {
 
             {/* Movie data */}
 
-            {moviesData && moviesData.length > 0 && (
-                <div className='grid grid-flow-row flex-wrap grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:px-16 p-5 gap-3'>
-                    {moviesData.map((movie) => (
-                        <div key={movie.imdbID} className='border flex flex-col items-center pb-5'>
 
-                            <img src={movie.Poster} alt="404" className='w-[267px] h-[350px] top-0' />
+            {moviesData === null && !loder && (
+                <div className='p-10 text-3xl flex justify-center items-center'>
+                    <p className='font-family w-2/4 text-center leading-[60px]'>Grab your movies and web series here...</p>
+                </div>
+            )}
+
+            {moviesData && moviesData.length > 0 && (
+                <div className='grid grid-flow-row flex-wrap grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:px-16 p-5 gap-4'>
+                    {moviesData.map((movie) => (
+                        <div key={movie.imdbID} className={`border rounded flex flex-col items-center pb-5 ${darkMode ? 'shadow-white shadow' : 'shadow-slate-400 shadow-md'}`}>
+
+                            <img src={movie.Poster} alt={movie.Poster !== "N/A" ? movie.Poster : 'Poster not available'} className='w-[267px] h-[350px] top-0' />
                             <div className='px-5 w-full'>
 
                                 <p className='text-center my-5'>{movie.Title}</p>
@@ -184,7 +195,7 @@ function Home() {
 
                         {/* Display movie poster if it exists */}
                         {selectedMovie.Poster && (
-                            <img src={selectedMovie.Poster} alt="Poster" />
+                            <img src={selectedMovie.Poster} alt={selectedMovie.Poster !== "N/A" ? selectedMovie.Poster : 'Poster not available'} />
                         )}
                         {/* Movie details */}
                         <div className='w-full flex justify-start'>

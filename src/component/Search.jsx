@@ -29,7 +29,8 @@ function Search() {
                         <input
                             type="text"
                             id="searchInput"
-                            className='px-3 py-2 indent-7 border w-[200px] sm:w-[400px] md:w-[500px] rounded-lg border-slate-800 focus:border-none focus:outline-none focus:ring-2 focus:ring-blue-500'
+                            className={`px-3 py-2 indent-7 border w-[200px] sm:w-[400px] md:w-[500px] rounded-lg border-slate-800 focus:border-none focus:outline-none focus:ring-2 focus:ring-blue-500 
+                                ${darkMode ? 'text-black' : 'text-black'}`}
                             placeholder="Search Movie Title"
                             onChange={handleInputChange}
                         />
