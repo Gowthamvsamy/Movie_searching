@@ -151,14 +151,6 @@ function Home() {
             )}
 
             {/* Movie data */}
-
-
-            {moviesData === null && !loder && (
-                <div className='p-10 text-3xl flex justify-center items-center'>
-                    <p className='font-family w-2/4 text-center leading-[60px]'>Grab your movies and web series here...</p>
-                </div>
-            )}
-
             {moviesData && moviesData.length > 0 && (
                 <div className='grid grid-flow-row flex-wrap grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:px-16 p-5 gap-4'>
                     {moviesData.map((movie) => (

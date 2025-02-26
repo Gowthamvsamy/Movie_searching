@@ -5,7 +5,7 @@ export const SearchContext = createContext();
 
 // Create the provider component
 export const SearchProvider = ({ children }) => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState('avengers');
 
     // Function to update the search term
     const updateSearchTerm = (term) => {
