@@ -49,3 +49,23 @@ Show Time is a React-based movie searching application that allows users to sear
 - **react-loading-indicators**: For showing loading spinners.
 - **TailwindCSS**: Used for styling the app.
 - **react-icons**: For icons used in the app (like star ratings).
+
+prompt:
+
+import this github "@https://github.com/Gowthamvsamy/Movie_searching.git"
+
+Analyze this feature requirement for implementation:
+
+Feature: Implement the pagination
+Existing Codebase Context: @/task-5 
+Integration Points: @Home.jsx 
+
+Implement pagination for the @Home.jsx  file:
+
+Ensure:
+- Follows existing codebase patterns
+- Proper error handling
+- Comprehensive logging
+- Input validation
+- Unit tests included
+- Documentation added

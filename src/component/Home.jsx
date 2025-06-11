@@ -3,8 +3,8 @@ import axios from 'axios';
 import { SearchContext } from '../context/SearchContext';
 import { Commet } from 'react-loading-indicators';
 import { useDarkMode } from '../context/dorkModeContext';
-function Home() {
 
+function Home() {
     const { searchTerm } = useContext(SearchContext);
     const [loder, setLoder] = useState(false); // Loder is used to interact the screen
     const [moviesData, setMoviesData] = useState(null); // Get the movie data from the API
@@ -14,12 +14,17 @@ function Home() {
     const [dropDown, setDropDown] = useState(false); // set the drop
     const [selectedType, setSelectedType] = useState(''); // store the selected movie type
     const [isButtonDisabled, setIsButtonDisabled] = useState(true); // State for disabling the button
+    
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [error, setError] = useState(null);
+    const ITEMS_PER_PAGE = 10;
 
     const toggleDropDown = () => {
         setDropDown(!dropDown);
     } // toggle dropdown visibility
-
-
 
     const movieTypes = [
         "All", "Movie", "Series", "Episode"
@@ -54,7 +59,6 @@ function Home() {
         }
     };
 
-
     // Close Modal
     const closeModal = () => {
         setSelectedMovie(null);
@@ -67,47 +71,63 @@ function Home() {
 
         async function fetchData() {
             setLoder(true);
+            setError(null);
             try {
                 const searchParams = {
-                    s: searchTerm, // Search term from context
+                    s: searchTerm,
                     apikey: 'd8f0849d',
+                    page: currentPage,
                 };
 
                 if (selectedType) {
-                    searchParams.type = selectedType.toLowerCase(); // Include type param in request
+                    searchParams.type = selectedType.toLowerCase();
                 }
 
                 const searchResponse = await axios.get('https://www.omdbapi.com/', {
                     params: searchParams,
                 });
 
-                // If no specific type is selected, show all movies
-                let fetchedMovies = searchResponse.data.Search || [];
+                if (searchResponse.data.Error) {
+                    setError(searchResponse.data.Error);
+                    setMoviesData([]);
+                    setTotalResults(0);
+                    setTotalPages(0);
+                    return;
+                }
 
-                // In case OMDB API does not handle type filtering well, we do a manual filter
+                let fetchedMovies = searchResponse.data.Search || [];
+                const totalResultsCount = parseInt(searchResponse.data.totalResults) || 0;
+
                 if (selectedType) {
-                    const filteredMovies = [];
-                    for (let i = 0; i < fetchedMovies.length; i++) {
-                        if (fetchedMovies[i].Type.toLowerCase() === selectedType.toLowerCase()) {
-                            filteredMovies.push(fetchedMovies[i]);
-                        }
-                    }
+                    const filteredMovies = fetchedMovies.filter(
+                        movie => movie.Type.toLowerCase() === selectedType.toLowerCase()
+                    );
                     fetchedMovies = filteredMovies;
                 }
 
-                setMoviesData(fetchedMovies); // Set filtered or all movies
-                setIsButtonDisabled(false); // Enable button if data fetched successfully
+                setMoviesData(fetchedMovies);
+                setTotalResults(totalResultsCount);
+                setTotalPages(Math.ceil(totalResultsCount / ITEMS_PER_PAGE));
+                setIsButtonDisabled(false);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                setError('Failed to fetch movies. Please try again later.');
+                setMoviesData([]);
             } finally {
-                setLoder(false); // Stop loader
+                setLoder(false);
             }
         }
 
         fetchData();
-    }, [searchTerm, selectedType]); // Re-fetch movies when search term or type changes
+    }, [searchTerm, selectedType, currentPage]);
 
-
+    // Pagination handlers
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     return (
         <div className={`min-h-[80vh] max-h-full ${darkMode ? 'bg-slate-800 text-white' : 'bg-white text-black'}`}>
@@ -136,9 +156,7 @@ function Home() {
                     <ul>
                         {movieTypes.map((type, index) => (
                             <li key={index} className="hover:bg-red-400 cursor-pointer rounded p-1 hover:text-white focus:bg-green-500" onClick={() => handleSelectType(type)}>{type}</li>
-
                         ))}
-
                     </ul>
                 </div>
             )}
@@ -150,29 +168,171 @@ function Home() {
                 </div>
             )}
 
+            {/* Error message */}
+            {error && (
+                <div className="text-center p-4 text-red-500">
+                    {error}
+                </div>
+            )}
+
             {/* Movie data */}
             {moviesData && moviesData.length > 0 && (
-                <div className='grid grid-flow-row flex-wrap grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:px-16 p-5 gap-4'>
-                    {moviesData.map((movie) => (
-                        <div key={movie.imdbID} className={`border rounded flex flex-col items-center pb-5 ${darkMode ? 'shadow-white shadow' : 'shadow-slate-400 shadow-md'}`}>
-
-                            <img src={movie.Poster} alt={movie.Poster !== "N/A" ? movie.Poster : 'Poster not available'} className='w-[267px] h-[350px] top-0' />
-                            <div className='px-5 w-full'>
-
-                                <p className='text-center my-5'>{movie.Title}</p>
-
-                                <div className='flex justify-between px-5 items-center my-5'>
-                                    <p>{movie.Year}</p>
-                                    <p>{movie.Type}</p>
+                <>
+                    <div className='grid grid-flow-row flex-wrap grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:px-16 p-5 gap-4'>
+                        {moviesData.map((movie) => (
+                            <div key={movie.imdbID} className={`border rounded flex flex-col items-center pb-5 ${darkMode ? 'shadow-white shadow' : 'shadow-slate-400 shadow-md'}`}>
+                                <img src={movie.Poster} alt={movie.Poster !== "N/A" ? movie.Poster : 'Poster not available'} className='w-[267px] h-[350px] top-0' />
+                                <div className='px-5 w-full'>
+                                    <p className='text-center my-5'>{movie.Title}</p>
+                                    <div className='flex justify-between px-5 items-center my-5'>
+                                        <p>{movie.Year}</p>
+                                        <p>{movie.Type}</p>
+                                    </div>
+                                    <button className='bg-gray-200 rounded border w-full py-2 text-blue-600 font-semibold hover:bg-blue-100 hover:scale-105'
+                                        onClick={() => openModal(movie.imdbID)}>Details</button>
                                 </div>
-
-                                <button className='bg-gray-200 rounded border w-full py-2 text-blue-600 font-semibold hover:bg-blue-100 hover:scale-105'
-                                    onClick={() => openModal(movie.imdbID)}>Details</button>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
 
-                </div>
+                    {/* Pagination controls */}
+                    <div className="flex justify-center items-center gap-4 p-4">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`px-4 py-2 rounded transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                                currentPage === 1
+                                    ? 'bg-gray-300 cursor-not-allowed opacity-50'
+                                    : darkMode
+                                    ? 'bg-white text-black hover:bg-gray-200 hover:shadow-lg hover:shadow-white/20'
+                                    : 'bg-slate-100 hover:bg-slate-200 hover:shadow-lg'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" 
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Previous
+                            </div>
+                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                            {(() => {
+                                const pages = [];
+                                const showPages = 4;
+                                let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                                let endPage = Math.min(totalPages, startPage + showPages - 1);
+
+                                // Adjust start page if we're near the end
+                                if (endPage - startPage + 1 < showPages) {
+                                    startPage = Math.max(1, endPage - showPages + 1);
+                                }
+
+                                // First page
+                                if (startPage > 1) {
+                                    pages.push(
+                                        <button
+                                            key={1}
+                                            onClick={() => handlePageChange(1)}
+                                            className={`w-8 h-8 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                                                darkMode
+                                                    ? 'bg-slate-700 hover:bg-slate-600'
+                                                    : 'bg-slate-100 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            1
+                                        </button>
+                                    );
+                                    if (startPage > 2) {
+                                        pages.push(
+                                            <span key="start-ellipsis" className="px-2">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                }
+
+                                // Page numbers
+                                for (let i = startPage; i <= endPage; i++) {
+                                    pages.push(
+                                        <button
+                                            key={i}
+                                            onClick={() => handlePageChange(i)}
+                                            className={`w-8 h-8 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                                                currentPage === i
+                                                    ? darkMode
+                                                        ? 'bg-white text-black scale-110 shadow-lg shadow-white/20'
+                                                        : 'bg-slate-800 text-white scale-110 shadow-lg'
+                                                    : darkMode
+                                                        ? 'bg-slate-700 hover:bg-slate-600'
+                                                        : 'bg-slate-100 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            {i}
+                                        </button>
+                                    );
+                                }
+
+                                // Last page
+                                if (endPage < totalPages) {
+                                    if (endPage < totalPages - 1) {
+                                        pages.push(
+                                            <span key="end-ellipsis" className="px-2">
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    pages.push(
+                                        <button
+                                            key={totalPages}
+                                            onClick={() => handlePageChange(totalPages)}
+                                            className={`w-8 h-8 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                                                darkMode
+                                                    ? 'bg-slate-700 hover:bg-slate-600'
+                                                    : 'bg-slate-100 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    );
+                                }
+
+                                return pages;
+                            })()}
+                        </div>
+                        
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className={`px-4 py-2 rounded transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                                currentPage === totalPages
+                                    ? 'bg-gray-300 cursor-not-allowed opacity-50'
+                                    : darkMode
+                                    ? 'bg-white text-black hover:bg-gray-200 hover:shadow-lg hover:shadow-white/20'
+                                    : 'bg-slate-100 hover:bg-slate-200 hover:shadow-lg'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                Next
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" 
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
+                </>
             )}
 
             {/* Model page */}
@@ -231,14 +391,11 @@ function Home() {
 
                             </div>
                         </div>
-
                     </div>
                 </div>
             )}
-
         </div>
     )
 }
-
 
 export default Home
